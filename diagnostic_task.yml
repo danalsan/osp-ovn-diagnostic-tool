@@ -1,0 +1,19 @@
+---
+
+- block:
+    - name: "execute diagnostic {{ item.name }} with command {{ item.command }}"
+      become: yes
+      ansible.builtin.shell: "{{ item.command }} | tr -d '\"'"
+      register: diagnostic_result
+  rescue:
+    - name: "diagnostic {{ item.name }} failed"
+      set_fact:
+        diagnostic_result:
+          stdout: FAILURE
+
+- debug:
+    var: diagnostic_result
+
+- ansible.builtin.set_fact:
+    node_results: "{{ node_results | default({}) | combine({item.name: diagnostic_result.stdout }) }}"
+

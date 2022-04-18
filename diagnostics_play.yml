@@ -1,0 +1,53 @@
+---
+- name: run OVN controller diagnostics
+  gather_facts: no
+  hosts: ovn_controller
+  vars:
+    diagnostics:
+      - name: ovn-remote-probe-interval
+        command: ovs-vsctl get open . external_ids:ovn-remote-probe-interval 
+      - name: ovn-openflow-probe-interval 
+        command: ovs-vsctl get open . external_ids:ovn-openflow-probe-interval
+      - name: ovn-monitor-all
+        command: ovs-vsctl get open . external_ids:ovn-monitor-all
+  tasks:
+    - name: run diagnostics
+      include_tasks: diagnostic_task.yml
+      loop: "{{ diagnostics }}"
+
+    - name: "store results from {{ inventory_hostname }}"
+      set_fact:
+        diagnostic_results: "{{ diagnostics_results | default({}) | combine({inventory_hostname: node_results }) }}" 
+
+        #    - debug:
+        #        var: diagnostic_results
+
+
+- name: run OVN DBs diagnostics
+  gather_facts: no
+  hosts: ovn_dbs
+  vars:
+    diagnostics:
+      - name: nb-inactivity-probe
+        command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-nbctl get connection . inactivity_probe
+      - name: sb-inactivity-probe 
+        command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-sbctl get connection . inactivity_probe
+      - name: datapath-grouping
+        command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-nbctl get nb_global . options:use_logical_dp_groups
+  tasks:
+    - name: run diagnostics
+      include_tasks: diagnostic_task.yml
+      loop: "{{ diagnostics }}"
+
+    - name: "store results from {{ inventory_hostname }}"
+      set_fact:
+        diagnostic_results: "{{ diagnostics_results | default({}) | combine({inventory_hostname: node_results }) }}" 
+
+
+- name: print results
+  gather_facts: no
+  hosts: ovn_controller, ovn_dbs
+  tasks:
+    - debug:
+        var: diagnostic_results
+
