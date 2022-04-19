@@ -69,7 +69,7 @@
   vars:
     diagnostics:
       - name: neutron-metadata-workers
-        command: podman exec $(podman ps -qf name=neutron_api) grep workers /etc/neutron/plugins/networking-ovn/networking-ovn-metadata-agent.ini
+        command: podman exec $(podman ps -qf name=ovn_metadata_agent) grep workers /etc/neutron/plugins/networking-ovn/networking-ovn-metadata-agent.ini
   tasks:
     - name: run diagnostics
       include_tasks: diagnostic_task.yml
