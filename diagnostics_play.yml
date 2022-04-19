@@ -33,14 +33,13 @@
       when: inventory_hostname in groups[item.key]
 
     - name: "store results from {{ inventory_hostname }}"
-      set_fact:
-        diagnostic_results: "{{ diagnostics_results | default({}) | combine({inventory_hostname: node_results | default({})}) }}"
+      ansible.builtin.set_fact:
+        diagnostics_results: "{{ diagnostics_results | default({}) | combine({inventory_hostname: node_results | default({})}) }}"
 
-
-- name: print results
-  gather_facts: no
-  hosts: ovn_controller, ovn_dbs
-  tasks:
-    - debug:
-        var: diagnostic_results
+    - name: save results for to a file
+      local_action:
+        module: copy
+        content: "{{ diagnostics_results | to_json }}"
+        dest: "{{ working_dir }}/results/{{ inventory_hostname }}_results.json"
+      when: diagnostics_results.keys() | length > 0
 
