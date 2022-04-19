@@ -1,0 +1,8 @@
+---
+- name: "run diagnostics for {{ item.key }}"
+  include_tasks: diagnostic_task.yml
+  loop: "{{ item.value }}"
+
+- name: "store results from {{ inventory_hostname }}"
+  set_fact:
+    diagnostic_results: "{{ diagnostics_results | default({}) | combine({inventory_hostname: node_results }) }}"
