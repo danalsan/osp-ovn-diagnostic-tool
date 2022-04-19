@@ -65,7 +65,7 @@
 
 - name: run Neutron metadata agent diagnostics
   gather_facts: no
-  hosts: neutron_metadata
+  hosts: ovn_metadata
   vars:
     diagnostics:
       - name: neutron-metadata-workers
