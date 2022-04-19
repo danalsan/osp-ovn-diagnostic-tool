@@ -68,7 +68,9 @@ function main() {
     inventory_file=$(get_ansible_inventory_file $SCRIPT_DIR)
 
     pushd $SCRIPT_DIR
+    [ -d results ] || mkdir results
     ansible-playbook -i $inventory_file -e working_dir="$SCRIPT_DIR" diagnostics_play.yml 
+    jq -s add results/*_results.json > results.json
     popd
 }
 
