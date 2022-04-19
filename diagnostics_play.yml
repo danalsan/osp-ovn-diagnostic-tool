@@ -5,8 +5,8 @@
   vars:
     diagnostics:
       - name: ovn-remote-probe-interval
-        command: ovs-vsctl get open . external_ids:ovn-remote-probe-interval 
-      - name: ovn-openflow-probe-interval 
+        command: ovs-vsctl get open . external_ids:ovn-remote-probe-interval
+      - name: ovn-openflow-probe-interval
         command: ovs-vsctl get open . external_ids:ovn-openflow-probe-interval
       - name: ovn-monitor-all
         command: ovs-vsctl get open . external_ids:ovn-monitor-all
@@ -17,7 +17,7 @@
 
     - name: "store results from {{ inventory_hostname }}"
       set_fact:
-        diagnostic_results: "{{ diagnostics_results | default({}) | combine({inventory_hostname: node_results }) }}" 
+        diagnostic_results: "{{ diagnostics_results | default({}) | combine({inventory_hostname: node_results }) }}"
 
         #    - debug:
         #        var: diagnostic_results
@@ -30,7 +30,7 @@
     diagnostics:
       - name: nb-inactivity-probe
         command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-nbctl get connection . inactivity_probe
-      - name: sb-inactivity-probe 
+      - name: sb-inactivity-probe
         command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-sbctl get connection . inactivity_probe
       - name: datapath-grouping
         command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-nbctl get nb_global . options:use_logical_dp_groups
@@ -41,7 +41,43 @@
 
     - name: "store results from {{ inventory_hostname }}"
       set_fact:
-        diagnostic_results: "{{ diagnostics_results | default({}) | combine({inventory_hostname: node_results }) }}" 
+        diagnostic_results: "{{ diagnostics_results | default({}) | combine({inventory_hostname: node_results }) }}"
+
+
+- name: run Neutron server diagnostics
+  gather_facts: no
+  hosts: neutron_api
+  vars:
+    diagnostics:
+      - name: neutron-server-workers
+        command: podman exec $(podman ps -qf name=neutron_api) grep workers /etc/neutron/neutron.conf
+      - name: neutron-server-ovsdb-timeout
+        command: podman exec $(podman ps -qf name=neutron_api) grep ovsdb_connection_timeout /etc/neutron/plugins/ml2/ml2_conf.ini
+  tasks:
+    - name: run diagnostics
+      include_tasks: diagnostic_task.yml
+      loop: "{{ diagnostics }}"
+
+    - name: "store results from {{ inventory_hostname }}"
+      set_fact:
+        diagnostic_results: "{{ diagnostics_results | default({}) | combine({inventory_hostname: node_results }) }}"
+
+
+- name: run Neutron metadata agent diagnostics
+  gather_facts: no
+  hosts: neutron_metadata
+  vars:
+    diagnostics:
+      - name: neutron-metadata-workers
+        command: podman exec $(podman ps -qf name=neutron_api) grep workers /etc/neutron/plugins/networking-ovn/networking-ovn-metadata-agent.ini
+  tasks:
+    - name: run diagnostics
+      include_tasks: diagnostic_task.yml
+      loop: "{{ diagnostics }}"
+
+    - name: "store results from {{ inventory_hostname }}"
+      set_fact:
+        diagnostic_results: "{{ diagnostics_results | default({}) | combine({inventory_hostname: node_results }) }}"
 
 
 - name: print results
