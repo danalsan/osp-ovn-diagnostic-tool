@@ -11,9 +11,6 @@
         diagnostic_result:
           stdout: FAILURE
 
-- debug:
-    var: diagnostic_result
-
 - ansible.builtin.set_fact:
     node_results: "{{ node_results | default({}) | combine({item.name: diagnostic_result.stdout }) }}"
 
