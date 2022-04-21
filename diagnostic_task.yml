@@ -12,5 +12,8 @@
           stdout: FAILURE
 
 - ansible.builtin.set_fact:
-    node_results: "{{ node_results | default({}) | combine({item.name: diagnostic_result.stdout }) }}"
+    temp_result: "{% if diagnostic_result.stdout_lines | length > 1 %} {{ diagnostic_result.stdout_lines | list }} {% else %} {{ diagnostic_result.stdout }} {% endif %}"
+
+- ansible.builtin.set_fact:
+    node_results: "{{ node_results | default({}) | combine({item.name: temp_result}) }}"
 

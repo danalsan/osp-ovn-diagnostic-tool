@@ -5,27 +5,39 @@
   vars:
     diagnostics:
       ovn_controller:
-        - name: ovn-remote-probe-interval
+        - name: OVN remote probe interval
           command: ovs-vsctl get open . external_ids:ovn-remote-probe-interval
-        - name: ovn-openflow-probe-interval
+        - name: OVN openflow probe interval
           command: ovs-vsctl get open . external_ids:ovn-openflow-probe-interval
-        - name: ovn-monitor-all
+        - name: ovn-monitor-all knob
           command: ovs-vsctl get open . external_ids:ovn-monitor-all
       ovn_dbs:
-        - name: nb-inactivity-probe
+        - name: NB DB inactivity probe
           command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-nbctl get connection . inactivity_probe
-        - name: sb-inactivity-probe
+        - name: SB DB inactivity probe
           command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-sbctl get connection . inactivity_probe
-        - name: datapath-grouping
+        - name: datapath grouping
           command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-nbctl get nb_global . options:use_logical_dp_groups
+        - name: Established connections to the NB DB
+          command: ss -H  -t state established '( sport = :6641 )' | wc -l
+        - name: Established connections to the SB DB
+          command: ss -H  -t state established '( sport = :6642 )' | wc -l
+        - name: Problematic load on NB DB
+          command: grep Unreasonably /var/log/containers/openvswitch/ovsdb-server-nb.log | sort -h -k 3 | tr "|" " " | awk '{ print $1 " " $7 }' | tail -n5
+        - name: Problematic load on SB DB
+          command: grep Unreasonably /var/log/containers/openvswitch/ovsdb-server-sb.log | sort -h -k 3 | tr "|" " " | awk '{ print $1 " " $7 }' | tail -n5
       neutron_api:
-        - name: neutron-server-workers
-          command: podman exec $(podman ps -qf name=neutron_api) grep workers /etc/neutron/neutron.conf
-        - name: neutron-server-ovsdb-timeout
-          command: podman exec $(podman ps -qf name=neutron_api) grep ovsdb_connection_timeout /etc/neutron/plugins/ml2/ml2_conf.ini
+        - name: Neutron API workers
+          command: grep api_workers /var/lib/config-data/puppet-generated/neutron/etc/neutron/neutron.conf | cut -d = -f 2
+        - name: Neutron RPC workers
+          command: grep rpc_workers /var/lib/config-data/puppet-generated/neutron/etc/neutron/neutron.conf | cut -d = -f 2
+        - name: Neutron RPC report state workers
+          command: grep rpc_state_report_workers /var/lib/config-data/puppet-generated/neutron/etc/neutron/neutron.conf | cut -d = -f 2
+        - name: Neutron server OVSDB timeout
+          command: grep ovsdb_connection_timeout /var/lib/config-data/puppet-generated/neutron/etc/neutron/plugins/ml2/ml2_conf.ini | cut -d = -f 2
       ovn_metadata:
-        - name: neutron-metadata-workers
-          command: podman exec $(podman ps -qf name=ovn_metadata_agent) grep workers /etc/neutron/plugins/networking-ovn/networking-ovn-metadata-agent.ini
+        - name: OVN metadata workers
+          command: grep metadata_workers /var/lib/config-data/puppet-generated/neutron/etc/neutron/plugins/networking-ovn/networking-ovn-metadata-agent.ini | cut -d = -f 2
   tasks:
     - name: run diagnostics on host group
       include_tasks: diagnostic_host.yml
