@@ -14,7 +14,7 @@
         - name: ovn-bridge-mappings configuration
           command: ovs-vsctl get open . external_ids:ovn-bridge-mappings || echo
         - name: OVN controller connection status
-          command: podman exec -it $(podman ps -qf name=ovn_controller) ovn-appctl connection-status
+          command: podman exec $(podman ps -qf name=ovn_controller) ovn-appctl connection-status
         - name: TCP connections to SB DB
           command: ss -H -pt '( dport = :6642 )' | awk '{ print $6 " " $5 " " $1 }'
       ovn_dbs:
