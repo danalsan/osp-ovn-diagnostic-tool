@@ -12,7 +12,7 @@
         - name: ovn-monitor-all knob
           command: ovs-vsctl get open . external_ids:ovn-monitor-all
         - name: ovn-bridge-mappings configuration
-          command: ovs-vsctl get open . external_ids:ovn-bridge-mappings || echo
+          command: (ovs-vsctl get open . external_ids:ovn-bridge-mappings || echo) | tr "," "\n"
         - name: OVN controller connection status
           command: podman exec $(podman ps -qf name=ovn_controller) ovn-appctl connection-status
         - name: TCP connections to SB DB
