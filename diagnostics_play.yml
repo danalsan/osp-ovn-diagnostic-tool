@@ -23,9 +23,9 @@
         - name: Established connections to the SB DB
           command: ss -H  -t state established '( sport = :6642 )' | wc -l
         - name: Problematic load on NB DB
-          command: grep Unreasonably /var/log/containers/openvswitch/ovsdb-server-nb.log | sort -h -k 3 | tr "|" " " | awk '{ print $1 " " $7 }' | tail -n5
+          command: zgrep -h Unreasonably /var/log/containers/openvswitch/ovsdb-server-nb.log* | sort -h -k 3 | tr "|" " " | awk '{ print $1 " " $7 }' | tail -n5
         - name: Problematic load on SB DB
-          command: grep Unreasonably /var/log/containers/openvswitch/ovsdb-server-sb.log | sort -h -k 3 | tr "|" " " | awk '{ print $1 " " $7 }' | tail -n5
+          command: zgrep -h Unreasonably /var/log/containers/openvswitch/ovsdb-server-sb.log* | sort -h -k 3 | tr "|" " " | awk '{ print $1 " " $7 }' | tail -n5
       neutron_api:
         - name: Neutron API workers
           command: grep api_workers /var/lib/config-data/puppet-generated/neutron/etc/neutron/neutron.conf | cut -d = -f 2
