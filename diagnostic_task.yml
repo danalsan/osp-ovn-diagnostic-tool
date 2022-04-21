@@ -3,7 +3,7 @@
 - block:
     - name: "execute diagnostic {{ item.name }} with command {{ item.command }}"
       become: yes
-      ansible.builtin.shell: "{{ item.command }} | tr -d '\"'"
+      ansible.builtin.shell: "({{ item.command }}) | tr -d '\"'"
       register: diagnostic_result
   rescue:
     - name: "diagnostic {{ item.name }} failed"
