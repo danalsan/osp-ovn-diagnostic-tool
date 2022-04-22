@@ -17,6 +17,8 @@
           command: podman exec $(podman ps -qf name=ovn_controller) ovn-appctl connection-status
         - name: TCP connections to SB DB
           command: ss -H -pt '( dport = :6642 )' | awk '{ print $6 " " $5 " " $1 }'
+        - name: Problematic load on ovn-controller
+          command: zgrep -h Unreasonably /var/log/containers/openvswitch/ovn-controller.log* | sort -h -k 3 | tr "|" " " | awk '{ print $1 " " $7 }' | tail -n5
       ovn_dbs:
         - name: NB DB inactivity probe
           command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-nbctl get connection . inactivity_probe
@@ -32,6 +34,10 @@
           command: zgrep -h Unreasonably /var/log/containers/openvswitch/ovsdb-server-nb.log* | sort -h -k 3 | tr "|" " " | awk '{ print $1 " " $7 }' | tail -n5
         - name: Problematic load on SB DB
           command: zgrep -h Unreasonably /var/log/containers/openvswitch/ovsdb-server-sb.log* | sort -h -k 3 | tr "|" " " | awk '{ print $1 " " $7 }' | tail -n5
+        - name: Problematic load on ovn-northd
+          command: zgrep -h Unreasonably /var/log/containers/openvswitch/ovn-northd.log* | sort -h -k 3 | tr "|" " " | awk '{ print $1 " " $7 }' | tail -n5
+        - name: Pacemaker failovers (non RAFT)
+          command: zgrep ovn-dbs /var/log/pacemaker/pacemaker.log* |grep -e Promote -e Recover | grep LogAction
       neutron_api:
         - name: Neutron API workers
           command: grep api_workers /var/lib/config-data/puppet-generated/neutron/etc/neutron/neutron.conf | cut -d = -f 2
