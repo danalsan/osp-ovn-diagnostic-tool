@@ -3,7 +3,7 @@
 - block:
     - name: "execute diagnostic {{ item.name }} with command {{ item.command }}"
       become: yes
-      ansible.builtin.shell: "{{ item.command }} | tr -d '\"'"
+      ansible.builtin.shell: "({{ item.command }}) | tr -d '\"'"
       register: diagnostic_result
   rescue:
     - name: "diagnostic {{ item.name }} failed"
@@ -12,7 +12,7 @@
           stdout: FAILURE
 
 - ansible.builtin.set_fact:
-    temp_result: "{% if diagnostic_result.stdout_lines | length > 1 %} {{ diagnostic_result.stdout_lines | list }} {% else %} {{ diagnostic_result.stdout }} {% endif %}"
+    temp_result: "{% if diagnostic_result.stdout_lines | length > 1 %}{{ diagnostic_result.stdout_lines | list }}{% else %}{{ diagnostic_result.stdout }}{% endif %}"
 
 - ansible.builtin.set_fact:
     node_results: "{{ node_results | default({}) | combine({item.name: temp_result}) }}"
