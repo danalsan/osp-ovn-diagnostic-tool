@@ -26,6 +26,10 @@
           command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-sbctl get connection . inactivity_probe
         - name: datapath grouping
           command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-nbctl get nb_global . options:use_logical_dp_groups
+        - name: Number of MAC_Bindings
+          command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-sbctl list mac_binding | grep _uuid -c
+        - name: Number of Port_Bindings
+          command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-sbctl list port_binding | grep _uuid -c
         - name: Established connections to the NB DB
           command: ss -H  -t state established '( sport = :6641 )' | wc -l
         - name: Established connections to the SB DB
@@ -38,6 +42,12 @@
           command: zgrep -h Unreasonably /var/log/containers/openvswitch/ovn-northd.log* | sort -h -k 3 | tr "|" " " | awk '{ print $1 " " $7 }' | tail -n5
         - name: Pacemaker failovers (non RAFT)
           command: zgrep ovn-dbs /var/log/pacemaker/pacemaker.log* |grep -e Promote -e Recover | grep LogAction
+        - name: Pacemaker settings
+          command: pcs resource config ovn-dbs-bundle | grep -e "(ovndb_servers-" -e "Attributes:"
+        - name: NB DB file size
+          command: ls -lh /var/lib/openvswitch/ovn/ovnnb_db.db  | awk '{ print $5 }'
+        - name: SB DB file size
+          command: ls -lh /var/lib/openvswitch/ovn/ovnsb_db.db  | awk '{ print $5 }'
       neutron_api:
         - name: Neutron API workers
           command: grep api_workers /var/lib/config-data/puppet-generated/neutron/etc/neutron/neutron.conf | cut -d = -f 2
