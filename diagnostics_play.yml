@@ -30,6 +30,10 @@
           command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-sbctl list mac_binding | grep _uuid -c
         - name: Number of Port_Bindings
           command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-sbctl list port_binding | grep _uuid -c
+        - name: Number of ACLs
+          command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-nbctl list acl | grep uuid -c
+        - name: Number of Port_Groups
+          command: podman exec $(podman ps -qf name=ovn-dbs-bundle) ovn-nbctl list port_group | grep uuid -c
         - name: Established connections to the NB DB
           command: ss -H  -t state established '( sport = :6641 )' | wc -l
         - name: Established connections to the SB DB
